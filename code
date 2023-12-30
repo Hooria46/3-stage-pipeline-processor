@@ -1,0 +1,59 @@
+class ThreeStagePipeline:
+    def __init__(self):
+        self.instruction_memory = []  # Instruction memory
+        self.registers = [0] * 8  # Registers R0 - R7
+        self.pc = 0  # Program counter
+        self.IF_ID = None  # Instruction Fetch / Instruction Decode stage
+        self.ID_EX = None  # Instruction Decode / Execution stage
+        self.EX_MEM = None  # Execution / Memory stage
+
+    def load_program(self, instructions):
+        self.instruction_memory = instructions
+
+    def instruction_fetch_decode(self):
+        if self.pc < len(self.instruction_memory):
+            self.IF_ID = self.instruction_memory[self.pc]
+            self.pc += 1
+
+    def instruction_decode_execute(self):
+        if self.IF_ID is not None:
+            instruction = self.IF_ID
+            opcode = instruction[0]
+            operand1 = instruction[1]
+            operand2 = instruction[2]
+            if opcode == 'ADD':
+                self.ID_EX = ('ADD', operand1, operand2, self.registers[operand1] + self.registers[operand2])
+            elif opcode == 'SUB':
+                self.ID_EX = ('SUB', operand1, operand2, self.registers[operand1] - self.registers[operand2])
+            elif opcode == 'LOAD':
+                self.ID_EX = ('LOAD', operand1, operand2, self.registers[operand2])
+            elif opcode == 'STORE':
+                self.ID_EX = ('STORE', operand1, operand2, self.registers[operand1])
+            else:
+                self.ID_EX = None
+
+    def execute_memory(self):
+        if self.ID_EX is not None:
+            instruction = self.ID_EX
+            opcode = instruction[0]
+            operand1 = instruction[1]
+            operand2 = instruction[2]
+            result = instruction[3]
+            if opcode == 'ADD' or opcode == 'SUB':
+                self.EX_MEM = result
+            elif opcode == 'LOAD':
+                self.EX_MEM = operand1
+                self.registers[operand1] = operand2  # Simulating memory read
+            elif opcode == 'STORE':
+                self.EX_MEM = operand2
+                # Simulating memory write - store value in memory location
+                self.registers[operand2] = operand1
+
+    def run(self):
+        while self.pc <= len(self.instruction_memory):
+            self.instruction_fetch_decode()
+            self.instruction_decode_execute()
+            self.execute_memory()
+            print("Registers:", self.registers)
+            print("Memory:", self.instruction_memory)
+            print("\n")
